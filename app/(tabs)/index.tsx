@@ -1,44 +1,49 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, Text, View, Image, Button, ActivityIndicator } from 'react-native';
-import { Camera, CameraType, CameraCapturedPicture } from 'expo-camera';
+import React, { useState, useRef } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  Button,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as VideoThumbnails from 'expo-video-thumbnails';
 import { calculateBallSpeed } from '../utils/ballDetection';
 
 const FootballStars = [
-  { 
-    name: '梅西', 
-    image: require('../../assets/images/messi.jpg'), 
-    speed: 122.5 
+  {
+    name: '梅西',
+    image: require('../../assets/images/messi.jpg'),
+    speed: 122.5,
   },
-  { 
-    name: 'C罗', 
-    image: require('../../assets/images/ronaldo.jpg'), 
-    speed: 121.0 
+  {
+    name: 'C罗',
+    image: require('../../assets/images/ronaldo.jpg'),
+    speed: 121.0,
   },
   // 可以添加更多球星
 ];
 
 export default function App() {
-  // const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [permission, requestPermission] = useCameraPermissions();
   const [recording, setRecording] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [ballSpeed, setBallSpeed] = useState<number | null>(null);
-  const [matchedStar, setMatchedStar] = useState<typeof FootballStars[0] | null>(null);
-  const cameraRef = useRef<Camera>(null);
+  const [matchedStar, setMatchedStar] = useState<
+    (typeof FootballStars)[0] | null
+  >(null);
+  const cameraRef = useRef(null);
   const recordingTimeout = useRef<NodeJS.Timeout>();
-
-  // useEffect(() => {
-  //   (async () => {
-  //     const { status } = await Camera.requestCameraPermissionsAsync();
-  //      setHasPermission(status === 'granted');
-  //   })();
-  // }, []);
 
   const startRecording = async () => {
     if (cameraRef.current) {
       setRecording(true);
       const video = await cameraRef.current.recordAsync();
-
+      console.log('视频录制完成:', video.uri);
+      Alert.alert('视频录制完成', video.uri);
+      processVideo(video.uri);
       // 5秒后自动停止录制
       recordingTimeout.current = setTimeout(() => {
         stopRecording();
@@ -52,40 +57,36 @@ export default function App() {
       clearTimeout(recordingTimeout.current);
       setRecording(false);
       await cameraRef.current.stopRecording();
-      const video = await startRecording(); // 使用 startRecording 返回的视频对象
-      if (video) {
-        await processVideo(video.uri);
-      }
     }
   };
 
   const processVideo = async (videoUri: string) => {
+    console.log('videoUri', videoUri);
     try {
       setProcessing(true);
-      
+
       // 生成视频帧
       const frames = [];
       for (let i = 0; i < 5; i++) {
-        const { uri } = await VideoThumbnails.getThumbnailAsync(
-          videoUri,
-          {
-            time: i * 1000, // 每秒一帧
-          }
-        );
+        const { uri } = await VideoThumbnails.getThumbnailAsync(videoUri, {
+          time: i * 1000, // 每秒一帧
+        });
         frames.push(uri);
       }
 
       // 计算球速
       const speed = await calculateBallSpeed(frames);
-      
+
       if (speed) {
         setBallSpeed(speed);
-        
+
         // 找到最接近的球星
         const star = FootballStars.reduce((prev, curr) => {
-          return Math.abs(curr.speed - speed) < Math.abs(prev.speed - speed) ? curr : prev;
+          return Math.abs(curr.speed - speed) < Math.abs(prev.speed - speed)
+            ? curr
+            : prev;
         });
-        
+
         setMatchedStar(star);
       }
     } catch (error) {
@@ -95,17 +96,23 @@ export default function App() {
     }
   };
 
-  // if (hasPermission === null) {
-  //   return <View />;
-  // }
-  // if (hasPermission === false) {
-  //   return <Text>没有相机访问权限</Text>;
-  // }
+  if (!permission) {
+    return <View />;
+  }
+
+  if (!permission.granted) {
+    return (
+      <View style={styles.container}>
+        <Text>我们需要您的许可才能使用相机</Text>
+        <Button onPress={requestPermission} title="授予权限" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>看看你的球速像谁？</Text>
-      
+
       <View style={styles.starsContainer}>
         {FootballStars.map((star) => (
           <View key={star.name} style={styles.starCard}>
@@ -116,11 +123,12 @@ export default function App() {
         ))}
       </View>
 
-      {!recording && !processing && !ballSpeed && (
-        <Camera
+      {!processing && !ballSpeed && (
+        <CameraView
+          mode="video"
           ref={cameraRef}
           style={styles.camera}
-          type={CameraType.back}
+          facing="back"
         />
       )}
 
@@ -133,10 +141,14 @@ export default function App() {
 
       {ballSpeed && matchedStar && (
         <View style={styles.resultContainer}>
-          <Text style={styles.speedText}>你的球速: {ballSpeed.toFixed(1)} km/h</Text>
-          <Text style={styles.matchText}>最接近 {matchedStar.name} 的球速！</Text>
-          <Button 
-            title="重新测试" 
+          <Text style={styles.speedText}>
+            你的球速: {ballSpeed.toFixed(1)} km/h
+          </Text>
+          <Text style={styles.matchText}>
+            最接近 {matchedStar.name} 的球速！
+          </Text>
+          <Button
+            title="重新测试"
             onPress={() => {
               setBallSpeed(null);
               setMatchedStar(null);
@@ -147,7 +159,7 @@ export default function App() {
 
       {!processing && !ballSpeed && (
         <Button
-          title={recording ? "停止录制" : "开始录制"}
+          title={recording ? '停止录制' : '开始录制'}
           onPress={recording ? stopRecording : startRecording}
         />
       )}
