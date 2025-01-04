@@ -1,6 +1,6 @@
 import * as tf from '@tensorflow/tfjs';
-import '@tensorflow/tfjs-react-native';
-import * as cocossd from '@tensorflow-models/coco-ssd';
+// import '@tensorflow/tfjs-react-native';
+// import * as cocossd from '@tensorflow-models/coco-ssd';
 import { manipulateAsync } from 'expo-image-manipulator';
 import * as FileSystem from 'expo-file-system';
 
@@ -19,23 +19,23 @@ const pixelsToMeters = (pixels: number) => {
 export const detectBall = async (imageUri: string) => {
   try {
     // 加载模型
-    const model = await cocossd.load();
+    // const model = await cocossd.load();
     
     // 处理图像
     const response = await fetch(imageUri);
     const imageBlob = await response.blob();
-    const imageTensor = await tf.browser.fromPixels(imageBlob);
+    // const imageTensor = await tf.browser.fromPixels(imageBlob);
     
     // 进行检测
-    const predictions = await model.detect(imageTensor);
+    // const predictions = await model.detect(imageTensor);
     
     // 查找球的预测结果
-    const ball = predictions.find(pred => pred.class === 'sports ball');
+    // const ball = predictions.find(pred => pred.class === 'sports ball');
     
-    return ball ? {
-      x: ball.bbox[0] + ball.bbox[2]/2, // 中心点x坐标
-      y: ball.bbox[1] + ball.bbox[3]/2  // 中心点y坐标
-    } : null;
+    // return ball ? {
+    //   x: ball.bbox[0] + ball.bbox[2]/2, // 中心点x坐标
+    //   y: ball.bbox[1] + ball.bbox[3]/2  // 中心点y坐标
+    // } : null;
   } catch (error) {
     console.error('球检测失败:', error);
     return null;

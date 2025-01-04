@@ -43,7 +43,7 @@ export default function App() {
       setRecording(true);
       const video = await cameraRef.current.recordAsync();
       console.log('视频录制完成:', video.uri);
-      Alert.alert('视频录制完成', video.uri);
+    //   Alert.alert('视频录制完成', video.uri);
       processVideo(video.uri);
       // 5秒后自动停止录制
       recordingTimeout.current = setTimeout(() => {
@@ -112,21 +112,6 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>看看你的球速像谁？</Text>
-
-      <View style={styles.starsContainer}>
-        {FootballStars.map((star) => (
-          <View key={star.name} style={styles.starCard}>
-            <Image source={star.image} style={styles.starImage} />
-            <Text>{star.name}</Text>
-            <Text>{star.speed} km/h</Text>
-          </View>
-        ))}
-      </View>
-
-      <TouchableOpacity onPress={startRecording}>
-        <Text style={styles.buttonText}>开始录制</Text>
-      </TouchableOpacity>
 
       {!processing && !ballSpeed && (
         <CameraView
@@ -206,9 +191,9 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
   camera: {
-    width: 300,
-    height: 400,
-    marginVertical: 20,
+    flex: 1,
+    width: '100%',
+    height: '100%',
   },
   processingContainer: {
     alignItems: 'center',

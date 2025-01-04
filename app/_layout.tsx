@@ -5,11 +5,18 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
+import { Platform } from 'react-native';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+
+// Web 平台的 polyfill
+if (Platform.OS === 'web') {
+  // @ts-ignore
+  window.Worker = undefined;
+}
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
