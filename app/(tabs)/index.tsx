@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import { NativeModules } from 'react-native';
 import {
   StyleSheet,
   Text,
@@ -23,12 +24,19 @@ const FootballStars = [
   },
   // 可以添加更多球星
 ];
+
+const getHelloMessage = async () => {
+  return await NativeModules.MyCustomModule.getHelloMessage();
+};
+
 export default function Index() {
   const router = useRouter();
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>看看你的球速像谁？</Text>
+      <Text style={styles.title}>看看你的球速像谁？ 
+       {getHelloMessage()}
+        </Text>
 
       <View style={styles.starsContainer}>
         {FootballStars.map((star) => (

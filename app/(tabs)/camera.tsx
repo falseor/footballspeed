@@ -70,7 +70,7 @@ export default function App() {
       const frames : string[] = [];
       for (let i = 0; i < 5; i++) {
         const { uri } = await VideoThumbnails.getThumbnailAsync(videoUri, {
-          time: i * 1000, // 每秒一帧
+          time: i * 100, // 每秒一帧
         });
         frames.push(uri);
       }
