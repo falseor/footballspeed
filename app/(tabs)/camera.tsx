@@ -12,6 +12,7 @@ import {
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as VideoThumbnails from 'expo-video-thumbnails';
 import { calculateBallSpeed } from '../utils/ballDetection';
+import { NativeModules } from 'react-native';
 
 const FootballStars = [
   {
@@ -62,36 +63,28 @@ export default function App() {
   };
 
   const processVideo = async (videoUri: string) => {
-    console.log('videoUri', videoUri);
     try {
       setProcessing(true);
-
-      // 生成视频帧
-      const frames : string[] = [];
-      for (let i = 0; i < 5; i++) {
-        const { uri } = await VideoThumbnails.getThumbnailAsync(videoUri, {
-          time: i * 100, // 每秒一帧
-        });
-        frames.push(uri);
-      }
-
-      // 计算球速
-      const speed = await calculateBallSpeed(frames);
-
-      if (speed) {
-        setBallSpeed(speed);
-
+      
+      // 调用原生模块处理视频
+      const result = await NativeModules.BallSpeedTrackerModule.processVideo(videoUri);
+      console.log('球速:', result.speed);
+      
+      // 处理结果
+      if (result.speed) {
+        // 更新UI显示球速
+        setBallSpeed(result.speed);
+        
         // 找到最接近的球星
-        const star = FootballStars.reduce((prev, curr) => {
-          return Math.abs(curr.speed - speed) < Math.abs(prev.speed - speed)
-            ? curr
-            : prev;
-        });
-
-        setMatchedStar(star);
+        const star = FootballStars.find(s => 
+          Math.abs(s.speed - result.speed) === Math.min(...FootballStars.map(s => Math.abs(s.speed - result.speed)))
+        );
+        setMatchedStar(star || null);
       }
+      
     } catch (error) {
       console.error('视频处理失败:', error);
+      Alert.alert('错误', '处理失败，请重试');
     } finally {
       setProcessing(false);
     }
